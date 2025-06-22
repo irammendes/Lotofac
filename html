@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador Avançado de Jogos Lotofácil</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .panel {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 12px 25px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background-color: #2ecc71;
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        .game {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #f1f8fe;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        .game-number {
+            font-weight: bold;
+            color: #3498db;
+            margin-right: 10px;
+        }
+        .ball {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            background-color: #3498db;
+            color: white;
+            border-radius: 50%;
+            margin: 3px;
+            font-weight: bold;
+        }
+        .favorite {
+            background-color: #e74c3c;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .control-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .stats-chart {
+            margin-top: 20px;
+            height: 300px;
+        }
+        #loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 16px;
+            color: #7f8c8d;
+        }
+        .tab-container {
+            margin-top: 20px;
+        }
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #7f8c8d;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-button.active {
+            color: #3498db;
+            border-bottom: 3px solid #3498db;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .number-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 15px;
+        }
+        .number-checkbox {
+            display: none;
+        }
+        .number-label {
+            display: inline-block;
+            width: 35px;
+            height: 35px;
+            line-height: 35px;
+            text-align: center;
+            background-color: #ecf0f1;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .number-checkbox:checked + .number-label {
+            background-color: #3498db;
+            color: white;
+        }
+        .favorite-number {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .stat-item {
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .stat-number {
+            font-weight: bold;
+            font-size: 18px;
+            color: #3498db;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        .delay-high {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gerador Avançado de Jogos da Lotofácil</h1>
+    
+    <div class="container">
+        <div class="panel">
+            <h2>Configurações</h2>
+            <div class="controls">
+                <div class="control-group">
+                    <label for="gameCount">Quantidade de Jogos:</label>
+                    <select id="gameCount">
+                        <option value="5">5 jogos</option>
+                        <option value="10" selected>10 jogos</option>
+                        <option value="15">15 jogos</option>
+                        <option value="20">20 jogos</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="strategy">Estratégia:</label>
+                    <select id="strategy">
+                        <option value="balanced">Equilíbrio (recomendado)</option>
+                        <option value="frequent">Números mais frequentes</option>
+                        <option value="delayed">Números atrasados</option>
+                        <option value="random">Aleatório puro</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>Selecionar números favoritos (opcional):</label>
+                <div class="number-selector" id="numberSelector"></div>
+            </div>
+            
+            <button id="generateBtn" onclick="generateGames()">Gerar Jogos</button>
+            <button id="analyzeBtn" onclick="analyzeStatistics()">Analisar Estatísticas</button>
+            
+            <div id="loading"></div>
+        </div>
+        
+        <div class="panel">
+            <h2>Resultados</h2>
+            <div id="result"></div>
+        </div>
+    </div>
+    
+    <div class="container" style="margin-top: 30px;">
+        <div class="panel">
+            <div class="tab-container">
+                <div class="tab-buttons">
+                    <button class="tab-button active" onclick="openTab('frequencyTab')">Frequência</button>
+                    <button class="tab-button" onclick="openTab('delayTab')">Atrasos</button>
+                    <button class="tab-button" onclick="openTab('pairsTab')">Pares/Ímpares</button>
+                    <button class="tab-button" onclick="openTab('rangesTab')">Faixas</button>
+                </div>
+                
+                <div id="frequencyTab" class="tab-content active">
+                    <h3>Frequência de Números</h3>
+                    <div class="stats-chart">
+                        <canvas id="frequencyChart"></canvas>
+                    </div>
+                    <div class="stats-grid" id="frequencyStats"></div>
+                </div>
+                
+                <div id="delayTab" class="tab-content">
+                    <h3>Atrasos dos Números</h3>
+                    <div class="stats-chart">
+                        <canvas id="delayChart"></canvas>
+                    </div>
+                    <div class="stats-grid" id="delayStats"></div>
+                </div>
+                
+                <div id="pairsTab" class="tab-content">
+                    <h3>Distribuição de Pares e Ímpares</h3>
+                    <div class="stats-chart">
+                        <canvas id="pairOddChart"></canvas>
+                    </div>
+                </div>
+                
+                <div id="rangesTab" class="tab-content">
+                    <h3>Distribuição por Faixas</h3>
+                    <div class="stats-chart">
+                        <canvas id="rangeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variáveis globais
+        let lotofacilData = [];
+        let frequencyStats = [];
+        let delayStats = [];
+        let pairOddStats = {};
+        let rangeStats = {};
+        let favoriteNumbers = [];
+        let frequencyChart, delayChart, pairOddChart, rangeChart;
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', async function() {
+            initializeNumberSelector();
+            await loadData();
+            document.getElementById('loading').textContent = 'Dados carregados. Selecione suas configurações e gere seus jogos.';
+        });
+        
+        // Inicializa o seletor de números
+        function initializeNumberSelector() {
+            const selector = document.getElementById('numberSelector');
+            for (let i = 1; i <= 25; i++) {
+                const checkboxId = `num-${i}`;
+                selector.innerHTML += `
+                    <input type="checkbox" id="${checkboxId}" class="number-checkbox" value="${i}" onchange="updateFavoriteNumbers()">
+                    <label for="${checkboxId}" class="number-label">${i}</label>
+                `;
+            }
+        }
+        
+        // Atualiza a lista de números favoritos
+        function updateFavoriteNumbers() {
+            favoriteNumbers = [];
+            document.querySelectorAll('.number-checkbox:checked').forEach(checkbox => {
+                favoriteNumbers.push(parseInt(checkbox.value));
+                checkbox.nextElementSibling.classList.add('favorite-number');
+            });
+            
+            document.querySelectorAll('.number-checkbox:not(:checked)').forEach(checkbox => {
+                checkbox.nextElementSibling.classList.remove('favorite-number');
+            });
+        }
+        
+        // Carrega dados da API
+        async function loadData() {
+            document.getElementById('loading').textContent = 'Carregando dados históricos...';
+            document.getElementById('generateBtn').disabled = true;
+            document.getElementById('analyzeBtn').disabled = true;
+            
+            try {
+                // Substitua esta URL pela API oficial quando disponível
+                const response = await fetch('https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil');
+                if (!response.ok) throw new Error('Erro na resposta da API');
+                
+                const data = await response.json();
+                if (!data || !data.length) throw new Error('Dados inválidos');
+                
+                lotofacilData = data.map(draw => draw.listaDezenas.map(Number).sort((a, b) => a - b));
+                analyzeData();
+                
+                document.getElementById('generateBtn').disabled = false;
+                document.getElementById('analyzeBtn').disabled = false;
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                document.getElementById('loading').innerHTML = `
+                    <p>Erro ao carregar dados da API. Usando dados de backup...</p>
+                    <p><small>${error.message}</small></p>
+                `;
+                
+                // Dados de backup caso a API falhe
+                loadBackupData();
+            }
+        }
+        
+        // Carrega dados de backup
+        function loadBackupData() {
+            // Simulação de dados históricos (últimos 100 concursos)
+            const backupData = [
+                [1,2,3,5,6,7,8,9,10,11,13,15,18,20,25],
+                [2,3,4,5,6,8,9,10,12,14,16,17,19,21,23],
+                [1,3,4,6,7,9,10,11,12,14,15,17,19,21,24],
+                // Adicione mais concursos aqui...
+            ];
+            
+            // Gerar mais dados baseados nos padrões existentes
+            for (let i = 0; i < 97; i++) {
+                const newDraw = generateRealisticDraw(backupData);
+                backupData.push(newDraw);
+            }
+            
+            lotofacilData = backupData;
+            analyzeData();
+            document.getElementById('generateBtn').disabled = false;
+            document.getElementById('analyzeBtn').disabled = false;
+        }
+        
+        // Gera um concurso realista baseado em dados existentes
+        function generateRealisticDraw(existingData) {
+            const randomDraw = existingData[Math.floor(Math.random() * existingData.length)];
+            const newDraw = [...randomDraw];
+            
+            // Alterar alguns números para criar variação
+            const changes = Math.floor(Math.random() * 4) + 1; // 1-4 mudanças
+            for (let i = 0; i < changes; i++) {
+                const indexToChange = Math.floor(Math.random() * 15);
+                let newNumber;
+                do {
+                    newNumber = Math.floor(Math.random() * 25) + 1;
+                } while (newDraw.includes(newNumber));
+                
+                newDraw[indexToChange] = newNumber;
+            }
+            
+            return newDraw.sort((a, b) => a - b);
+        }
+        
+        // Analisa os dados para extrair estatísticas
+        function analyzeData() {
+            // Frequência de números
+            const frequencies = Array(26).fill(0);
+            lotofacilData.forEach(draw => {
+                draw.forEach(num => {
+                    frequencies[num]++;
+                });
+            });
+            
+            frequencyStats = Array.from({length: 25}, (_, i) => ({
+                number: i + 1,
+                frequency: frequencies[i + 1],
+                percentage: (frequencies[i + 1] / lotofacilData.length * 100).toFixed(1)
+            })).sort((a, b) => b.frequency - a.frequency);
+            
+            // Atrasos dos números
+            delayStats = Array.from({length: 25}, (_, i) => {
+                const num = i + 1;
+                let delay = 0;
+                for (let j = lotofacilData.length - 1; j >= 0; j--) {
+                    if (lotofacilData[j].includes(num)) break;
+                    delay++;
+                }
+                return { number: num, delay };
+            }).sort((a, b) => b.delay - a.delay);
+            
+            // Estatísticas de pares e ímpares
+            pairOddStats = { pairs: 0, odds: 0, distribution: Array(16).fill(0) };
+            lotofacilData.forEach(draw => {
+                const pairs = draw.filter(n => n % 2 === 0).length;
+                pairOddStats.pairs += pairs;
+                pairOddStats.odds += (15 - pairs);
+                pairOddStats.distribution[pairs]++;
+            });
+            
+            // Estatísticas por faixas de números
+            rangeStats = {
+                '1-5': 0, '6-10': 0, '11-15': 0, '16-20': 0, '21-25': 0
+            };
+            
+            lotofacilData.forEach(draw => {
+                draw.forEach(num => {
+                    if (num <= 5) rangeStats['1-5']++;
+                    else if (num <= 10) rangeStats['6-10']++;
+                    else if (num <= 15) rangeStats['11-15']++;
+                    else if (num <= 20) rangeStats['16-20']++;
+                    else rangeStats['21-25']++;
+                });
+            });
+            
+            // Normalizar para porcentagens
+            const total = lotofacilData.length * 15;
+            for (const range in rangeStats) {
+                rangeStats[range] = (rangeStats[range] / total * 100).toFixed(1);
+            }
+        }
+        
+        // Gera os jogos conforme as configurações
+        async function generateGames() {
+            const gameCount = parseInt(document.getElementById('gameCount').value);
+            const strategy = document.getElementById('strategy').value;
+            
+            document.getElementById('loading').textContent = 'Gerando jogos...';
+            document.getElementById('result').innerHTML = '';
+            
+            // Dar tempo para a UI atualizar
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            const games = [];
+            for (let i = 0; i < gameCount; i++) {
+                const game = generateGame(strategy);
+                games.push(game);
+            }
+            
+            displayResults(games);
+            document.getElementById('loading').textContent = '';
+        }
+        
+        // Gera um único jogo baseado na estratégia selecionada
+        function generateGame(strategy) {
+            let candidates = [];
+            
+            switch(strategy) {
+                case 'frequent':
+                    // Top 18 números mais frequentes (para ter alguma variação)
+                    candidates = frequencyStats.slice(0, 18).map(item => item.number);
+                    break;
+                    
+                case 'delayed':
+                    // Números com maior atraso (top 18)
+                    candidates = delayStats.slice(0, 18).map(item => item.number);
+                    break;
+                    
+                case 'random':
+                    // Todos os números são candidatos
+                    candidates = Array.from({length: 25}, (_, i) => i + 1);
+                    break;
+                    
+                case 'balanced':
+                default:
+                    // Combinação equilibrada de frequentes e atrasados
+                    const topFrequent = frequencyStats.slice(0, 12).map(item => item.number);
+                    const topDelayed = delayStats.slice(0, 12).map(item => item.number);
+                    candidates = [...new Set([...topFrequent, ...topDelayed])];
+                    break;
+            }
+            
+            // Adicionar números favoritos se selecionados
+            if (favoriteNumbers.length > 0) {
+                candidates = [...new Set([...candidates, ...favoriteNumbers])];
+            }
+            
+            // Garantir que temos números suficientes para escolher
+            while (candidates.length < 15) {
+                const randomNum = Math.floor(Math.random() * 25) + 1;
+                if (!candidates.includes(randomNum)) {
+                    candidates.push(randomNum);
+                }
+            }
+            
+            // Selecionar 15 números únicos
+            const selected = [];
+            while (selected.length < 15) {
+                const randomIndex = Math.floor(Math.random() * candidates.length);
+                const num = candidates[randomIndex];
+                
+                if (!selected.includes(num)) {
+                    selected.push(num);
+                    
+                    // Remover o número para não ser selecionado novamente
+                    candidates.splice(randomIndex, 1);
+                    
+                    // Se acabarmos os candidatos, adicionar números aleatórios
+                    if (candidates.length === 0 && selected.length < 15) {
+                        let newNum;
+                        do {
+                            newNum = Math.floor(Math.random() * 25) + 1;
+                        } while (selected.includes(newNum));
+                        selected.push(newNum);
+                    }
+                }
+            }
+            
+            // Ordenar e garantir distribuição razoável de pares/ímpares
+            const sorted = selected.sort((a, b) => a - b);
+            const pairs = sorted.filter(n => n % 2 === 0).length;
+            
+            // Se a distribuição estiver muito desbalanceada, regenerar
+            if (pairs < 5 || pairs > 10) {
+                return generateGame(strategy);
+            }
+            
+            return sorted;
+        }
+        
+        // Exibe os resultados na tela
+        function displayResults(games) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<h3>Seus Jogos Gerados:</h3>';
+            
+            games.forEach((game, index) => {
+                const gameDiv = document.createElement('div');
+                gameDiv.className = 'game';
+                
+                let numbersHtml = '';
+                game.forEach(num => {
+                    const isFavorite = favoriteNumbers.includes(num);
+                    numbersHtml += `<span class="ball ${isFavorite ? 'favorite' : ''}">${num.toString().padStart(2, '0')}</span>`;
+                });
+                
+                const pairs = game.filter(n => n % 2 === 0).length;
+                gameDiv.innerHTML = `
+                    <div><span class="game-number">Jogo ${index + 1}:</span></div>
+                    <div>${numbersHtml}</div>
+                    <div style="margin-top: 8px; font-size: 14px; color: #7f8c8d;">
+                        ${pairs} pares | ${15 - pairs} ímpares
+                    </div>
+                `;
+                
+                resultDiv.appendChild(gameDiv);
+            });
+        }
+        
+        // Analisa e exibe estatísticas detalhadas
+        function analyzeStatistics() {
+            document.getElementById('loading').textContent = 'Preparando análise...';
+            
+            // Dar tempo para a UI atualizar
+            setTimeout(() => {
+                renderCharts();
+                renderStatsTables();
+                document.getElementById('loading').textContent = '';
+            }, 50);
+        }
+        
+        // Renderiza os gráficos
+        function renderCharts() {
+            // Gráfico de frequência
+            const freqCtx = document.getElementById('frequencyChart').getContext('2d');
+            if (frequencyChart) frequencyChart.destroy();
+            
+            frequencyChart = new Chart(freqCtx, {
+                type: 'bar',
+                data: {
+                    labels: frequencyStats.map(item => item.number),
+                    datasets: [{
+                        label: 'Frequência de Números',
+                        data: frequencyStats.map(item => item.frequency),
+                        backgroundColor: '#3498db',
+                        borderColor: '#2980b9',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Quantidade de vezes que saiu'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Números'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de atrasos
+            const delayCtx = document.getElementById('delayChart').getContext('2d');
+            if (delayChart) delayChart.destroy();
+            
+            delayChart = new Chart(delayCtx, {
+                type: 'bar',
+                data: {
+                    labels: delayStats.map(item => item.number),
+                    datasets: [{
+                        label: 'Atraso dos Números (concursos desde a última aparição)',
+                        data: delayStats.map(item => item.delay),
+                        backgroundColor: '#e74c3c',
+                        borderColor: '#c0392b',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Concursos desde a última aparição'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Números'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de pares e ímpares
+            const pairOddCtx = document.getElementById('pairOddChart').getContext('2d');
+            if (pairOddChart) pairOddChart.destroy();
+            
+            pairOddChart = new Chart(pairOddCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Pares', 'Ímpares'],
+                    datasets: [{
+                        data: [pairOddStats.pairs, pairOddStats.odds],
+                        backgroundColor: ['#3498db', '#e74c3c'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Proporção de Pares e Ímpares'
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de distribuição por faixas
+            const rangeCtx = document.getElementById('rangeChart').getContext('2d');
+            if (rangeChart) rangeChart.destroy();
+            
+            rangeChart = new Chart(rangeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['1-5', '6-10', '11-15', '16-20', '21-25'],
+                    datasets: [{
+                        data: [
+                            rangeStats['1-5'],
+                            rangeStats['6-10'],
+                            rangeStats['11-15'],
+                            rangeStats['16-20'],
+                            rangeStats['21-25']
+                        ],
+                        backgroundColor: [
+                            '#3498db',
+                            '#2ecc71',
+                            '#f1c40f',
+                            '#e74c3c',
+                            '#9b59b6'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Distribuição por Faixas de Números (%)'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Renderiza as tabelas de estatísticas
+        function renderStatsTables() {
+            // Tabela de frequência
+            const freqTable = document.getElementById('frequencyStats');
+            freqTable.innerHTML = '';
+            
+            frequencyStats.forEach(stat => {
+                freqTable.innerHTML += `
+                    <div class="stat-item">
+                        <div class="stat-number">${stat.number}</div>
+                        <div class="stat-label">${stat.frequency} vezes</div>
+                        <div class="stat-label">${stat.percentage}%</div>
+                    </div>
+                `;
+            });
+            
+            // Tabela de atrasos
+            const delayTable = document.getElementById('delayStats');
+            delayTable.innerHTML = '';
+            
+            delayStats.forEach(stat => {
+                delayTable.innerHTML += `
+                    <div class="stat-item">
+                        <div class="stat-number ${stat.delay > 10 ? 'delay-high' : ''}">${stat.number}</div>
+                        <div class="stat-label">${stat.delay} concursos</div>
+                        <div class="stat-label">${stat.delay > 10 ? 'Atrasado' : ''}</div>
+                    </div>
+                `;
+            });
+        }
+        
+        // Controla as abas
+        function openTab(tabId) {
+            // Esconde todos os conteúdos de abas
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove a classe active de todos os botões
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Mostra a aba selecionada
+            document.getElementById(tabId).classList.add('active');
+            
+            // Ativa o botão correspondente
+            event.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>
